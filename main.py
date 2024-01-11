@@ -23,6 +23,45 @@ def save_saving_account(comptes):
         json.dump(comptes, file, indent=2)
 
 
+# Barplot savings
+def barplot_savings(comptes):
+    df = pd.DataFrame(comptes)
+
+    df = df.rename(columns={'nom': 'Name saving'})
+    df = df.rename(columns={'solde': 'Sold (€)'})
+    df = df.rename(columns={'taux_interet': 'Interest rate (%)'})
+    df = df.rename(columns={'plafond': 'Limit (€)'})
+
+    # Ajouter une nouvelle entrée pour le total
+    df = pd.concat([df, pd.DataFrame([{"Name saving": "Total", "Sold (€)": df['Sold (€)'].sum()}])])
+
+    # Barplot avec Altair
+    chart = alt.Chart(df).mark_bar().encode(
+        x=alt.X('Name saving:N', axis=alt.Axis(title=None)),
+        y=alt.Y('Sold (€):Q', axis=alt.Axis(title='Sold')),
+        color='Name saving',  # Couleur de la barre de solde
+        tooltip=['Name saving:N', 'Sold (€):Q', 'Limit (€):Q', 'Interest rate (%):Q'],
+    ).properties(
+        width=400,
+        height=300
+    ).interactive()
+
+    # Ajouter une barre transparente pour le plafond
+    transparent_chart = alt.Chart(df).mark_bar().encode(
+        x=alt.X('Name saving:N', axis=alt.Axis(title=None)),
+        y=alt.Y('Limit (€):Q', axis=alt.Axis(title='Limit')),
+        color='Name saving',  # Couleur transparente pour le plafond
+        opacity=alt.value(0.5),  # Opacité de la barre transparente
+        tooltip=['Name saving:N', 'Sold (€):Q', 'Limit (€):Q', 'Interest rate (%):Q']
+    ).properties(
+        width=400,
+        height=300
+    ).interactive()
+
+    # Afficher le graphique avec Streamlit
+    st.altair_chart(chart + transparent_chart, theme=None, use_container_width=True)
+
+
 # Calcul des soldes prévisionnels
 def calculer_soldes_previsionnels(comptes, duree_annees=20, annee_en_cours=2024):
     for compte in comptes:
@@ -49,7 +88,6 @@ def calculer_solde_total(comptes, duree_annees=20, annee_en_cours=2024):
 
 
 def graphique_total(df, solde_total, annee_en_cours, comptes_selectionnes):
-
     # Ajouter les colonnes pour le graphique prévisionnel
     df["Année"] = list(range(annee_en_cours, annee_en_cours + 21))
     df["Type"] = "Total"
@@ -110,7 +148,6 @@ def calculer_interets_total(interets_par_compte, duree_annees=20):
 
 
 def graphique_interet(df_interets, interets_par_compte, interets_total, annee_en_cours, comptes_selectionnes):
-
     # Ajouter les colonnes pour le graphique des intérêts
     df_interets["Année"] = list(range(annee_en_cours, annee_en_cours + 21))
     df_interets["Type"] = "Total"
@@ -153,60 +190,58 @@ def objectif_placement(x, comptes):
 
 # Main page
 def main():
-    st.title(f"📈 💸 [GK!LB](https://www.youtube.com/watch?v=S4Ez-aDbAoA)")
-
     # Load from json
     comptes = load_saving_accounts()
 
     # Ajouter un nouveau compte
-    st.sidebar.header("Add a saving account")
-    new_account_name = st.sidebar.text_input("Name")
-    solde_initial_nouveau = st.sidebar.number_input("Solde initial du nouveau compte", step=1.0)
-    taux_interet_nouveau = st.sidebar.number_input("Taux d'intérêt (%) du nouveau compte", step=0.1)
-    plafond_nouveau = st.sidebar.number_input("Plafond du nouveau compte", step=1.0)
-
-    if any(compte["nom"] == new_account_name for compte in comptes):
-        disable = True
-    else:
-        disable = False
-
-    if st.sidebar.button("Ajouter le nouveau compte", disabled=disable,
-                         help="Le nom existe déjà" if disable else ""):
-        nouveau_compte = {
-            "nom": new_account_name,
-            "solde": solde_initial_nouveau,
-            "taux_interet": taux_interet_nouveau,
-            "plafond": plafond_nouveau
-        }
-        comptes.append(nouveau_compte)
-        save_saving_account(comptes)
-        compte_selectionne = nouveau_compte_nom
-
+    st.sidebar.title(f"📈 💸 [GK!LB](https://www.youtube.com/watch?v=S4Ez-aDbAoA)")
     st.sidebar.divider()
+    with st.sidebar.expander("Add a saving account", expanded=False):
+        new_account_name = st.text_input("Name")
+        solde_initial_nouveau = st.number_input("Solde initial du nouveau compte", step=1.0)
+        taux_interet_nouveau = st.number_input("Taux d'intérêt (%) du nouveau compte", step=0.1)
+        plafond_nouveau = st.number_input("Plafond du nouveau compte", step=1.0)
+
+        if any(compte["nom"] == new_account_name for compte in comptes):
+            disable = True
+        else:
+            disable = False
+
+        if st.button("Ajouter le nouveau compte", disabled=disable,
+                             help="Le nom existe déjà" if disable else ""):
+            nouveau_compte = {
+                "nom": new_account_name,
+                "solde": solde_initial_nouveau,
+                "taux_interet": taux_interet_nouveau,
+                "plafond": plafond_nouveau
+            }
+            comptes.append(nouveau_compte)
+            save_saving_account(comptes)
+            compte_selectionne = ""
 
     # Modifier un compte
-    st.sidebar.header("Modifier un compte")
-    compte_selectionne = st.sidebar.selectbox("Sélectionner un compte", [""] + [compte["nom"] for compte in comptes],
-                                              index=0 if len(comptes) == 0 else 1)
-    if compte_selectionne:
-        compte_a_modifier = next((compte for compte in comptes if compte["nom"] == compte_selectionne), None)
-        if compte_a_modifier:
-            st.sidebar.write(f"**Compte Sélectionné : {compte_selectionne}**")
-            solde_initial = st.sidebar.number_input("Solde initial", value=float(compte_a_modifier["solde"]), step=1.0)
-            taux_interet = st.sidebar.number_input("Taux d'intérêt (%)", value=float(compte_a_modifier["taux_interet"]),
-                                                   step=0.1)
-            plafond = st.sidebar.number_input("Plafond du compte", value=float(compte_a_modifier["plafond"]), step=1.0)
+    with st.sidebar.expander("Modifier un compte", expanded=False):
+        compte_selectionne = st.selectbox("Sélectionner un compte", [""] + [compte["nom"] for compte in comptes],
+                                                  index=0 if len(comptes) == 0 else 1)
+        if compte_selectionne:
+            compte_a_modifier = next((compte for compte in comptes if compte["nom"] == compte_selectionne), None)
+            if compte_a_modifier:
+                st.write(f"**Compte Sélectionné : {compte_selectionne}**")
+                solde_initial = st.number_input("Solde initial", value=float(compte_a_modifier["solde"]), step=1.0)
+                taux_interet = st.number_input("Taux d'intérêt (%)", value=float(compte_a_modifier["taux_interet"]),
+                                                       step=0.1)
+                plafond = st.number_input("Plafond du compte", value=float(compte_a_modifier["plafond"]), step=1.0)
 
-            compte_a_modifier["solde"] = solde_initial
-            compte_a_modifier["taux_interet"] = taux_interet
-            compte_a_modifier["plafond"] = plafond
-            save_saving_account(comptes)
-
-            # Bouton pour supprimer le compte
-            if st.sidebar.button("Supprimer le compte"):
-                comptes.remove(compte_a_modifier)
+                compte_a_modifier["solde"] = solde_initial
+                compte_a_modifier["taux_interet"] = taux_interet
+                compte_a_modifier["plafond"] = plafond
                 save_saving_account(comptes)
-                compte_selectionne = ""
+
+                # Bouton pour supprimer le compte
+                if st.button("Supprimer le compte"):
+                    comptes.remove(compte_a_modifier)
+                    save_saving_account(comptes)
+                    compte_selectionne = ""
 
     st.sidebar.divider()
 
@@ -214,11 +249,24 @@ def main():
     if st.sidebar.button("Actualiser"):
         st.rerun()
 
-    # Sélection des comptes dans Streamlit avec st.checkbox
-    comptes_selectionnes = [st.checkbox(compte["nom"], value=True) for compte in comptes]
+    # Barplot savings
+    barplot_savings(comptes)
 
-    # Filtrer les comptes en fonction de la sélection
-    comptes_selectionnes = [compte for compte, selectionne in zip(comptes, comptes_selectionnes) if selectionne]
+    comptes = [{**compte, "is_widget": True} for compte in comptes]
+    df = pd.DataFrame(comptes)
+    edited_df = st.data_editor(df,
+                               column_config={
+                                   "nom": "Name saving",
+                                   "solde": "Sold (€)",
+                                   "taux_interet": "Interest rate (%)",
+                                   "plafond": "Saving limit (€)",
+                                   "is_widget": "Selection",
+                               },
+                               disabled=["nom", "solde", "taux_interet", "plafond"],
+                               hide_index=True)
+
+    # comptes_selected = edited_df.loc[edited_df["is_widget"], "nom"].tolist()
+    comptes_selectionnes = [compte for compte in comptes if compte["nom"] in edited_df.loc[edited_df["is_widget"], "nom"].tolist()]
 
     # Montant total à placer
     montant_total = sum(compte["solde"] for compte in comptes_selectionnes)
@@ -243,13 +291,6 @@ def main():
     df_interets = pd.DataFrame()
 
     graphique_interet(df_interets, interets_par_compte, interets_total, annee_en_cours, comptes_selectionnes)
-
-
-    # Afficher la liste des comptes
-    st.header("Liste des Comptes")
-    for compte in comptes:
-        st.write(
-            f"**{compte['nom']}**: Solde actuel - {compte['solde']} €, Taux d'intérêt - {compte['taux_interet']}%, Plafond - {compte['plafond']} €")
 
     # Afficher la répartition optimale dans Streamlit
     st.header("Répartition Optimale des Fonds pour Maximiser les Intérêts")
