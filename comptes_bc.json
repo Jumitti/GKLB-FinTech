@@ -1,25 +1,19 @@
 [
   {
-    "nom": "TR",
-    "solde": 100.31,
-    "taux_interet": 4.0,
-    "plafond": 100000.0
-  },
-  {
     "nom": "LDD",
-    "solde": 7220.28,
+    "solde": 12000.0,
     "taux_interet": 3.0,
     "plafond": 12000.0
   },
   {
     "nom": "Livret A",
-    "solde": 21803.98,
+    "solde": 7024.26,
     "taux_interet": 3.0,
     "plafond": 22950.0
   },
   {
     "nom": "LEP",
-    "solde": 1.0,
+    "solde": 10000.0,
     "taux_interet": 6.0,
     "plafond": 10000.0
   }

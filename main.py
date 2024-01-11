@@ -8,18 +8,18 @@ from scipy.optimize import minimize
 
 
 # Chargement des comptes depuis le fichier JSON
-def charger_comptes():
+def load_saving_accounts():
     try:
-        with open("comptes.json", "r") as file:
-            comptes = json.load(file)
+        with open("saving_accounts.json", "r") as file:
+            saving_accounts = json.load(file)
     except FileNotFoundError:
-        comptes = []
-    return comptes
+        saving_accounts = []
+    return saving_accounts
 
 
 # Enregistrement des comptes dans le fichier JSON
-def enregistrer_comptes(comptes):
-    with open("comptes.json", "w") as file:
+def save_saving_account(comptes):
+    with open("saving_accounts.json", "w") as file:
         json.dump(comptes, file, indent=2)
 
 
@@ -48,107 +48,7 @@ def calculer_solde_total(comptes, duree_annees=20, annee_en_cours=2024):
     return solde_total
 
 
-# Fonction pour calculer les intérêts gagnés
-def calculer_interets(comptes, duree_annees=20, annee_en_cours=2024):
-    interets_par_compte = {compte["nom"]: [0] * (duree_annees + 1) for compte in comptes}
-
-    for annee in range(1, duree_annees + 1):
-        for compte in comptes:
-            solde_annuel_calculable = min(compte["solde_previsionnel"][annee - 1], compte["plafond"])
-            interet_annuel = solde_annuel_calculable * (compte["taux_interet"] / 100)
-            interets_par_compte[compte["nom"]][annee] = interet_annuel
-
-    return interets_par_compte
-
-
-# Fonction pour calculer la somme totale des intérêts
-def calculer_interets_total(interets_par_compte, duree_annees=20):
-    interets_total = [0] * (duree_annees + 1)
-
-    for compte, interets in interets_par_compte.items():
-        for annee in range(duree_annees + 1):
-            interets_total[annee] += interets[annee]
-
-    return interets_total
-
-
-# Fonction objectif à maximiser
-def objectif_placement(x, comptes):
-    return -sum(compte["taux_interet"] * xi for compte, xi in zip(comptes, x))
-
-
-# Fonction principale de l'application
-def main():
-    st.title("Gestion des Comptes d'Épargne")
-
-    # Charger les comptes depuis le fichier JSON
-    comptes = charger_comptes()
-
-    # Sidebar pour ajouter ou modifier un compte
-    st.sidebar.header("Modifier un compte")
-
-    # Sélectionner un compte existant
-    compte_selectionne = st.sidebar.selectbox("Sélectionner un compte", [""] + [compte["nom"] for compte in comptes])
-
-    # Si un compte est sélectionné, afficher ses détails et permettre la modification ou la suppression
-    if compte_selectionne:
-        compte_a_modifier = next((compte for compte in comptes if compte["nom"] == compte_selectionne), None)
-        if compte_a_modifier:
-            st.sidebar.write(f"**Compte Sélectionné : {compte_selectionne}**")
-            solde_initial = st.sidebar.number_input("Solde initial", value=float(compte_a_modifier["solde"]), step=1.0)
-            taux_interet = st.sidebar.number_input("Taux d'intérêt (%)", value=float(compte_a_modifier["taux_interet"]),
-                                                   step=0.1)
-            plafond = st.sidebar.number_input("Plafond du compte", value=float(compte_a_modifier["plafond"]), step=1.0)
-
-            # Mettre à jour les informations du compte sélectionné
-            compte_a_modifier["solde"] = solde_initial
-            compte_a_modifier["taux_interet"] = taux_interet
-            compte_a_modifier["plafond"] = plafond
-            enregistrer_comptes(comptes)
-
-            # Bouton pour supprimer le compte
-            if st.sidebar.button("Supprimer le compte"):
-                comptes.remove(compte_a_modifier)
-                enregistrer_comptes(comptes)
-                compte_selectionne = ""
-
-    st.sidebar.header("Ajouter un compte")
-    # Bouton pour ajouter un nouveau compte
-    nouveau_compte_nom = st.sidebar.text_input("Nom du nouveau compte")
-    solde_initial_nouveau = st.sidebar.number_input("Solde initial du nouveau compte", step=1.0)
-    taux_interet_nouveau = st.sidebar.number_input("Taux d'intérêt (%) du nouveau compte", step=0.1)
-    plafond_nouveau = st.sidebar.number_input("Plafond du nouveau compte", step=1.0)
-
-    if any(compte["nom"] == nouveau_compte_nom for compte in comptes):
-        st.sidebar.error("Le nom existe deja")
-        disable = True
-    else:
-        disable = False
-
-    if st.sidebar.button("Ajouter le nouveau compte", disabled=disable):
-        nouveau_compte = {
-            "nom": nouveau_compte_nom,
-            "solde": solde_initial_nouveau,
-            "taux_interet": taux_interet_nouveau,
-            "plafond": plafond_nouveau
-        }
-        comptes.append(nouveau_compte)
-        enregistrer_comptes(comptes)
-        compte_selectionne = nouveau_compte_nom
-
-    # Calculer les soldes prévisionnels sur 20 ans à partir de 2024 (modifiable)
-    annee_en_cours = 2024
-    calculer_soldes_previsionnels(comptes, duree_annees=20, annee_en_cours=annee_en_cours)
-
-    # Calculer les intérêts gagnés
-    interets_par_compte = calculer_interets(comptes, duree_annees=20, annee_en_cours=annee_en_cours)
-
-    # Calculer le solde total et la somme des intérêts totaux
-    solde_total = calculer_solde_total(comptes)
-    interets_total = calculer_interets_total(interets_par_compte)
-
-    # Créer un DataFrame pandas pour utiliser avec Altair
-    df = pd.DataFrame()
+def graphique_total(df, solde_total, annee_en_cours, comptes_selectionnes):
 
     # Ajouter les colonnes pour le graphique prévisionnel
     df["Année"] = list(range(annee_en_cours, annee_en_cours + 21))
@@ -156,7 +56,7 @@ def main():
     df["Montant"] = solde_total
 
     # Ajouter les colonnes pour chaque compte dans le graphique prévisionnel
-    for compte in comptes:
+    for compte in comptes_selectionnes:
         df_compte = pd.DataFrame({
             'Année': list(range(annee_en_cours, annee_en_cours + 21)),
             'Type': compte["nom"],
@@ -184,8 +84,32 @@ def main():
 
     st.altair_chart(chart, theme=None, use_container_width=True)
 
-    # Créer un DataFrame pandas pour utiliser avec Altair
-    df_interets = pd.DataFrame()
+
+# Fonction pour calculer les intérêts gagnés
+def calculer_interets(comptes, duree_annees=20, annee_en_cours=2024):
+    interets_par_compte = {compte["nom"]: [0] * (duree_annees + 1) for compte in comptes}
+
+    for annee in range(1, duree_annees + 1):
+        for compte in comptes:
+            solde_annuel_calculable = min(compte["solde_previsionnel"][annee - 1], compte["plafond"])
+            interet_annuel = solde_annuel_calculable * (compte["taux_interet"] / 100)
+            interets_par_compte[compte["nom"]][annee] = interet_annuel
+
+    return interets_par_compte
+
+
+# Fonction pour calculer la somme totale des intérêts
+def calculer_interets_total(interets_par_compte, duree_annees=20):
+    interets_total = [0] * (duree_annees + 1)
+
+    for compte, interets in interets_par_compte.items():
+        for annee in range(duree_annees + 1):
+            interets_total[annee] += interets[annee]
+
+    return interets_total
+
+
+def graphique_interet(df_interets, interets_par_compte, interets_total, annee_en_cours, comptes_selectionnes):
 
     # Ajouter les colonnes pour le graphique des intérêts
     df_interets["Année"] = list(range(annee_en_cours, annee_en_cours + 21))
@@ -193,7 +117,7 @@ def main():
     df_interets["Intérêts"] = interets_total
 
     # Ajouter les colonnes pour chaque compte dans le graphique des intérêts
-    for compte in comptes:
+    for compte in comptes_selectionnes:
         df_interets_compte = pd.DataFrame({
             'Année': list(range(annee_en_cours, annee_en_cours + 21)),
             'Type': compte["nom"],
@@ -221,14 +145,74 @@ def main():
 
     st.altair_chart(chart_interets_total, theme=None, use_container_width=True)
 
-    # Afficher la liste des comptes
-    st.header("Liste des Comptes")
-    for compte in comptes:
-        st.write(
-            f"**{compte['nom']}**: Solde actuel - {compte['solde']} €, Taux d'intérêt - {compte['taux_interet']}%, Plafond - {compte['plafond']} €")
 
-    # Afficher la répartition optimale dans Streamlit
-    st.header("Répartition Optimale des Fonds pour Maximiser les Intérêts")
+# Fonction objectif à maximiser
+def objectif_placement(x, comptes):
+    return -sum(compte["taux_interet"] * xi for compte, xi in zip(comptes, x))
+
+
+# Main page
+def main():
+    st.title(f"📈 💸 [GK!LB](https://www.youtube.com/watch?v=S4Ez-aDbAoA)")
+
+    # Load from json
+    comptes = load_saving_accounts()
+
+    # Ajouter un nouveau compte
+    st.sidebar.header("Add a saving account")
+    new_account_name = st.sidebar.text_input("Name")
+    solde_initial_nouveau = st.sidebar.number_input("Solde initial du nouveau compte", step=1.0)
+    taux_interet_nouveau = st.sidebar.number_input("Taux d'intérêt (%) du nouveau compte", step=0.1)
+    plafond_nouveau = st.sidebar.number_input("Plafond du nouveau compte", step=1.0)
+
+    if any(compte["nom"] == new_account_name for compte in comptes):
+        disable = True
+    else:
+        disable = False
+
+    if st.sidebar.button("Ajouter le nouveau compte", disabled=disable,
+                         help="Le nom existe déjà" if disable else ""):
+        nouveau_compte = {
+            "nom": new_account_name,
+            "solde": solde_initial_nouveau,
+            "taux_interet": taux_interet_nouveau,
+            "plafond": plafond_nouveau
+        }
+        comptes.append(nouveau_compte)
+        save_saving_account(comptes)
+        compte_selectionne = nouveau_compte_nom
+
+    st.sidebar.divider()
+
+    # Modifier un compte
+    st.sidebar.header("Modifier un compte")
+    compte_selectionne = st.sidebar.selectbox("Sélectionner un compte", [""] + [compte["nom"] for compte in comptes],
+                                              index=0 if len(comptes) == 0 else 1)
+    if compte_selectionne:
+        compte_a_modifier = next((compte for compte in comptes if compte["nom"] == compte_selectionne), None)
+        if compte_a_modifier:
+            st.sidebar.write(f"**Compte Sélectionné : {compte_selectionne}**")
+            solde_initial = st.sidebar.number_input("Solde initial", value=float(compte_a_modifier["solde"]), step=1.0)
+            taux_interet = st.sidebar.number_input("Taux d'intérêt (%)", value=float(compte_a_modifier["taux_interet"]),
+                                                   step=0.1)
+            plafond = st.sidebar.number_input("Plafond du compte", value=float(compte_a_modifier["plafond"]), step=1.0)
+
+            compte_a_modifier["solde"] = solde_initial
+            compte_a_modifier["taux_interet"] = taux_interet
+            compte_a_modifier["plafond"] = plafond
+            save_saving_account(comptes)
+
+            # Bouton pour supprimer le compte
+            if st.sidebar.button("Supprimer le compte"):
+                comptes.remove(compte_a_modifier)
+                save_saving_account(comptes)
+                compte_selectionne = ""
+
+    st.sidebar.divider()
+
+    # Actualiser
+    if st.sidebar.button("Actualiser"):
+        st.rerun()
 
     # Sélection des comptes dans Streamlit avec st.checkbox
     comptes_selectionnes = [st.checkbox(compte["nom"], value=True) for compte in comptes]
@@ -238,6 +222,37 @@ def main():
 
     # Montant total à placer
     montant_total = sum(compte["solde"] for compte in comptes_selectionnes)
+
+    # Calculer les soldes prévisionnels sur 20 ans à partir de 2024 (modifiable)
+    annee_en_cours = 2024
+    calculer_soldes_previsionnels(comptes_selectionnes, duree_annees=20, annee_en_cours=annee_en_cours)
+
+    # Calculer les intérêts gagnés
+    interets_par_compte = calculer_interets(comptes_selectionnes, duree_annees=20, annee_en_cours=annee_en_cours)
+
+    # Calculer le solde total et la somme des intérêts totaux
+    solde_total = calculer_solde_total(comptes_selectionnes)
+    interets_total = calculer_interets_total(interets_par_compte)
+
+    # Créer un DataFrame pandas pour utiliser avec Altair
+    df = pd.DataFrame()
+
+    graphique_total(df, solde_total, annee_en_cours, comptes_selectionnes)
+
+    # Créer un DataFrame pandas pour utiliser avec Altair
+    df_interets = pd.DataFrame()
+
+    graphique_interet(df_interets, interets_par_compte, interets_total, annee_en_cours, comptes_selectionnes)
+
+
+    # Afficher la liste des comptes
+    st.header("Liste des Comptes")
+    for compte in comptes:
+        st.write(
+            f"**{compte['nom']}**: Solde actuel - {compte['solde']} €, Taux d'intérêt - {compte['taux_interet']}%, Plafond - {compte['plafond']} €")
+
+    # Afficher la répartition optimale dans Streamlit
+    st.header("Répartition Optimale des Fonds pour Maximiser les Intérêts")
 
     # Contraintes
     contrainte_somme = lambda x: np.sum(x) - montant_total
@@ -278,7 +293,6 @@ def main():
     comptes = json.loads(json_str)
 
     # Calculer les soldes prévisionnels sur 20 ans à partir de 2024 (modifiable)
-    annee_en_cours = 2024
     calculer_soldes_previsionnels(comptes, duree_annees=20, annee_en_cours=annee_en_cours)
 
     # Calculer les intérêts gagnés
@@ -291,64 +305,13 @@ def main():
     # Créer un DataFrame pandas pour utiliser avec Altair
     df = pd.DataFrame()
 
-    # Ajouter les colonnes pour le graphique prévisionnel
-    df["Année"] = list(range(annee_en_cours, annee_en_cours + 21))
-    df["Type"] = "Total"
-    df["Montant"] = solde_total
-
-    # Ajouter les colonnes pour chaque compte dans le graphique prévisionnel
-    for compte in comptes:
-        df_compte = pd.DataFrame({
-            'Année': list(range(annee_en_cours, annee_en_cours + 21)),
-            'Type': compte["nom"],
-            'Montant': compte["solde_previsionnel"]
-        })
-        df = pd.concat([df, df_compte], ignore_index=True)
-
-    # Afficher le graphique prévisionnel
-    st.header("Graphique Prévisionnel avec Solde Total pour Chaque Compte")
-    chart = alt.Chart(df).mark_line().encode(
-        x='Année',
-        y='Montant',
-        color='Type',
-        tooltip=['Année', 'Type', 'Montant']
-    ).properties(
-        width=600,
-        height=400
-    )
-
-    st.altair_chart(chart, use_container_width=True)
+    graphique_total(df, solde_total, annee_en_cours, comptes)
 
     # Créer un DataFrame pandas pour utiliser avec Altair
     df_interets = pd.DataFrame()
 
-    # Ajouter les colonnes pour le graphique des intérêts
-    df_interets["Année"] = list(range(annee_en_cours, annee_en_cours + 21))
-    df_interets["Type"] = "Total"
-    df_interets["Intérêts"] = interets_total
+    graphique_interet(df_interets, interets_par_compte, interets_total, annee_en_cours, comptes)
 
-    # Ajouter les colonnes pour chaque compte dans le graphique des intérêts
-    for compte in comptes:
-        df_interets_compte = pd.DataFrame({
-            'Année': list(range(annee_en_cours, annee_en_cours + 21)),
-            'Type': compte["nom"],
-            'Intérêts': interets_par_compte[compte["nom"]]
-        })
-        df_interets = pd.concat([df_interets, df_interets_compte], ignore_index=True)
-
-    # Afficher le graphique des intérêts avec la somme totale des intérêts
-    st.header("Graphique des Intérêts avec Intérêts Total pour Chaque Compte")
-    chart_interets_total = alt.Chart(df_interets).mark_line().encode(
-        x='Année',
-        y='Intérêts',
-        color='Type',
-        tooltip=['Année', 'Type', 'Intérêts']
-    ).properties(
-        width=600,
-        height=400
-    )
-
-    st.altair_chart(chart_interets_total, use_container_width=True)
 
 if __name__ == "__main__":
     main()
