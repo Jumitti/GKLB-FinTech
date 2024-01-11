@@ -208,7 +208,7 @@ def main():
             disable = False
 
         if st.button("Ajouter le nouveau compte", disabled=disable,
-                             help="Le nom existe déjà" if disable else ""):
+                     help="Le nom existe déjà" if disable else ""):
             nouveau_compte = {
                 "nom": new_account_name,
                 "solde": solde_initial_nouveau,
@@ -222,14 +222,14 @@ def main():
     # Modifier un compte
     with st.sidebar.expander("Modifier un compte", expanded=False):
         compte_selectionne = st.selectbox("Sélectionner un compte", [""] + [compte["nom"] for compte in comptes],
-                                                  index=0 if len(comptes) == 0 else 1)
+                                          index=0 if len(comptes) == 0 else 1)
         if compte_selectionne:
             compte_a_modifier = next((compte for compte in comptes if compte["nom"] == compte_selectionne), None)
             if compte_a_modifier:
                 st.write(f"**Compte Sélectionné : {compte_selectionne}**")
                 solde_initial = st.number_input("Solde initial", value=float(compte_a_modifier["solde"]), step=1.0)
                 taux_interet = st.number_input("Taux d'intérêt (%)", value=float(compte_a_modifier["taux_interet"]),
-                                                       step=0.1)
+                                               step=0.1)
                 plafond = st.number_input("Plafond du compte", value=float(compte_a_modifier["plafond"]), step=1.0)
 
                 compte_a_modifier["solde"] = solde_initial
@@ -266,7 +266,8 @@ def main():
                                hide_index=True)
 
     # comptes_selected = edited_df.loc[edited_df["is_widget"], "nom"].tolist()
-    comptes_selectionnes = [compte for compte in comptes if compte["nom"] in edited_df.loc[edited_df["is_widget"], "nom"].tolist()]
+    comptes_selectionnes = [compte for compte in comptes if
+                            compte["nom"] in edited_df.loc[edited_df["is_widget"], "nom"].tolist()]
 
     # Montant total à placer
     montant_total = sum(compte["solde"] for compte in comptes_selectionnes)
