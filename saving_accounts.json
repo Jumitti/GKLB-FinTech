@@ -1,0 +1,26 @@
+[
+  {
+    "nom": "LDD",
+    "solde": 7220.28,
+    "taux_interet": 3.0,
+    "plafond": 12000.0
+  },
+  {
+    "nom": "Livret A",
+    "solde": 21803.98,
+    "taux_interet": 3.0,
+    "plafond": 22950.0
+  },
+  {
+    "nom": "LEP",
+    "solde": 30.0,
+    "taux_interet": 6.0,
+    "plafond": 10000.0
+  },
+  {
+    "nom": "Trade Republique",
+    "solde": 100.31,
+    "taux_interet": 4.0,
+    "plafond": 100000.0
+  }
+]
