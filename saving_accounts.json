@@ -1,25 +1,25 @@
 [
   {
-    "nom": "LDD",
-    "solde": 7250.28,
+    "nom": "Saving 1",
+    "solde": 7250.00,
     "taux_interet": 3.0,
     "plafond": 12000.0
   },
   {
-    "nom": "Livret A",
-    "solde": 11773.98,
+    "nom": "Saving 2",
+    "solde": 11800.00,
     "taux_interet": 3.0,
     "plafond": 22950.0
   },
   {
-    "nom": "LEP",
+    "nom": "Saving 3",
     "solde": 10000.0,
     "taux_interet": 6.0,
     "plafond": 10000.0
   },
   {
-    "nom": "Trade Republique",
-    "solde": 100.31,
+    "nom": "Saving 4",
+    "solde": 100.00,
     "taux_interet": 4.0,
     "plafond": 100000.0
   }

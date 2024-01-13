@@ -194,7 +194,7 @@ def main():
     comptes = load_saving_accounts()
 
     # Ajouter un nouveau compte
-    st.sidebar.title(f"📈 💸 [GK!LB](https://www.youtube.com/watch?v=S4Ez-aDbAoA)")
+    st.sidebar.title(f"📈 💸 [GK!LB - FinTech](https://www.youtube.com/watch?v=S4Ez-aDbAoA)")
     st.sidebar.divider()
     with st.sidebar.expander("Add a saving account", expanded=False):
         new_account_name = st.text_input("Name")
