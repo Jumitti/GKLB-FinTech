@@ -32,6 +32,11 @@ def save_saving_account(depositary_file, savings):
         json.dump(savings, depositary_file, indent=2)
 
 
+def contains_special_characters(text):
+    forbidden_characters = r"\/:*?\"<>|"
+    return any(char in forbidden_characters for char in text)
+
+
 # Barplot savings
 def barplot_savings(savings):
     df = pd.DataFrame(savings)
@@ -287,7 +292,7 @@ if len(depositary_files) > 0:
 
     # Add a saving account
     with st.sidebar.expander("Add saving account", expanded=False):
-        saving_name = st.text_input("Saving account name")
+        saving_name = st.text_input("Saving account name", max_chars=20)
         initial_sold = st.number_input("Initial sold (€)", step=1.0, min_value=0.0)
         interest_rate = st.number_input("Interest rate (%)", step=0.1, min_value=0.0,
                                         max_value=100.0)
@@ -296,11 +301,18 @@ if len(depositary_files) > 0:
         if any(isinstance(saving, dict) and "saving" in saving and saving["saving"] == saving_name for saving in
                savings):
             disable = True
+            disable_message = "Saving account already exists"
+        else:
+            disable = False
+
+        if contains_special_characters(saving_name):
+            disable = True
+            disable_message = ' \ / : * ? \ " < > | not allowed'
         else:
             disable = False
 
         if st.button("Add saving account", disabled=disable,
-                     help="Saving account already exists" if disable else ""):
+                     help=disable_message if disable else ""):
             new_saving = {
                 "saving": saving_name,
                 "sold": initial_sold,
@@ -339,7 +351,8 @@ if len(depositary_files) > 0:
                     disable_delete = True
                 else:
                     disable_delete = False
-                if st.button("Delete saving account", disabled=disable_delete, help="Cannot delete an account if the depository only has one" if disable_delete else ""):
+                if st.button("Delete saving account", disabled=disable_delete,
+                             help="Cannot delete an account if the depository only has one" if disable_delete else ""):
                     savings.remove(selected_saving)
                     save_saving_account(depositary_file, savings)
                     st.toast(f"Saving account **{selected_saving['saving']}** deleted", icon='🗑️')
@@ -354,8 +367,8 @@ if len(depositary_files) > 0:
 
 # Create a depositary
 with st.sidebar.expander("Create depositary profile", expanded=False):
-    depositary_name = st.text_input("Depositary name")
-    saving_name = st.text_input("Saving account name", key="4")
+    depositary_name = st.text_input("Depositary name", max_chars=20)
+    saving_name = st.text_input("Saving account name", max_chars=20, key="4")
     initial_sold = st.number_input("Initial sold (€)", step=1.0, min_value=0.0, key='1')
     interest_rate = st.number_input("Interest rate (%)", step=0.1, min_value=0.0, max_value=100.0, key='2')
     limit = st.number_input("Limit (€)", step=1.0, min_value=0.0, key='3')
@@ -364,13 +377,20 @@ with st.sidebar.expander("Create depositary profile", expanded=False):
     if len(depositary_files) > 0:
         if os.path.exists(f'depositary/{depositary_file}'):
             disable = True
+            disable_message = "Depositary name already exists"
         else:
             disable = False
     else:
         disable = False
 
+    if contains_special_characters(depositary_name) or contains_special_characters(saving_name):
+        disable = True
+        disable_message = ' \ / : * ? \ " < > | not allowed'
+    else:
+        disable = False
+
     if st.button("Create depositary profile", disabled=disable,
-                 help="Depositary name already exists" if disable else ""):
+                 help=disable_message if disable else ""):
         new_depositary = {"depositary": depositary_name}
         new_saving = {"saving": saving_name,
                       "sold": initial_sold,
@@ -391,7 +411,8 @@ with col1:
         "accounts—enabling users to add, modify, or delete accounts with ease. GK!LB simplifies the process of "
         "tracking and optimizing savings, offering a streamlined and efficient financial management solution.</div>",
         unsafe_allow_html=True)
-    st.write("Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
+    st.write(
+        "Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
     st.divider()
 if len(depositary_files) > 0:
     with col2:
