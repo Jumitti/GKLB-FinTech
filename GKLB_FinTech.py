@@ -1,12 +1,12 @@
 import json
-
-import altair as alt
-import pandas as pd
-import streamlit as st
-import numpy as np
-from scipy.optimize import minimize
 import os
 from datetime import datetime
+
+import altair as alt
+import numpy as np
+import pandas as pd
+import streamlit as st
+from scipy.optimize import minimize
 
 
 # Depositary folder
