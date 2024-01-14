@@ -150,7 +150,8 @@ def calculer_interets_total(interets_par_compte, duree_annees):
 
 
 # Graphic of interest rate
-def graphique_interet(df_interets, interets_par_compte, forcast, interets_total, annee_en_cours, comptes_selectionnes, title):
+def graphique_interet(df_interets, interets_par_compte, forcast, interets_total, annee_en_cours, comptes_selectionnes,
+                      title):
     df_interets["Year"] = list(range(annee_en_cours, annee_en_cours + forcast + 1))
     df_interets["Savings"] = "Total"
     df_interets["Interest (€)"] = interets_total
@@ -185,6 +186,7 @@ def graphique_interet(df_interets, interets_par_compte, forcast, interets_total,
 # Maximizing investments
 def objectif_placement(x, comptes):
     return -sum(compte["taux_interet"] * xi for compte, xi in zip(comptes, x))
+
 
 # Contrainte de somme totale
 def contrainte_somme(x, montant_total):
@@ -321,7 +323,7 @@ with st.sidebar.expander("Ajouter un dépositaire", expanded=False):
         save_saving_account(depositary_file, [nouveau_depositary, nouveau_compte])
         st.toast("Depositaire ajouté")
 
-col1, col2, col3 = st.columns([0.8,1.1,1.1])
+col1, col2, col3 = st.columns([0.8, 1.1, 1.1])
 if len(json_files) > 0:
     with col1:
         st.subheader("📊 Savings information")
@@ -364,7 +366,8 @@ if len(json_files) > 0:
 
         df_interets = pd.DataFrame()
         title = "🪙 Forecast interest rate"
-        graphique_interet(df_interets, interets_par_compte, forcast, interets_total, annee_en_cours, comptes_selectionnes, title)
+        graphique_interet(df_interets, interets_par_compte, forcast, interets_total, annee_en_cours,
+                          comptes_selectionnes, title)
 
     with col3:
         container = st.container()
@@ -418,7 +421,7 @@ if len(json_files) > 0:
             ligne_resultat = {"Year": annee, "Total sold": nouveau_montant, "Total interest": nouveau_montant_interet}
             for i, compte in enumerate(comptes_selectionnes):
                 ligne_resultat[f"{compte['nom']} sold"] = nouveaux_soldes[i]
-                if (nouveaux_soldes[i] - nouveaux_interet[i])/compte["plafond"] < 0.95:
+                if (nouveaux_soldes[i] - nouveaux_interet[i]) / compte["plafond"] < 0.95:
                     ligne_resultat[f"{compte['nom']} to_place"] = nouveaux_soldes[i] - nouveaux_interet[i]
                 else:
                     ligne_resultat[f"{compte['nom']} to_place"] = f'**Full** ({compte["plafond"]})'
@@ -478,8 +481,8 @@ if len(json_files) > 0:
     subset_sold = pd.IndexSlice[:, df_resultats.columns[df_resultats.columns.str.contains('sold')]]
     subset_to_place = pd.IndexSlice[:, df_resultats.columns[df_resultats.columns.str.contains('to_place')]]
     subset_interest = pd.IndexSlice[:, df_resultats.columns[df_resultats.columns.str.contains('interest')]]
-    styled_df = df_resultats.style.set_properties(**{'background-color': '#FFCCCC'}, subset=subset_sold)\
-        .set_properties(**{'background-color': '#CCCCFF'}, subset=subset_to_place)\
+    styled_df = df_resultats.style.set_properties(**{'background-color': '#FFCCCC'}, subset=subset_sold) \
+        .set_properties(**{'background-color': '#CCCCFF'}, subset=subset_to_place) \
         .set_properties(**{'background-color': '#CCFFCC'}, subset=subset_interest)
     st.dataframe(styled_df, hide_index=True, use_container_width=True)
 
