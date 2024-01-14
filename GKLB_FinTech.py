@@ -107,7 +107,7 @@ def sold_chart(df_sold, total_sold, forecast, current_year, selected_savings, ti
         df_sold = pd.concat([df_sold, df_params], ignore_index=True)
 
     st.subheader(title)
-    opacity = alt.selection_single(fields=['Savings'], on='click', bind='legend')
+    opacity = alt.selection_point(fields=['Savings'], on='click', bind='legend')
     sold_chart = alt.Chart(df_sold).mark_line().encode(
         x='Year',
         y='Sold (€)',
@@ -166,7 +166,7 @@ def interest_chart(df_interest, saving_interest, forecast, total_interest, curre
         df_interest = pd.concat([df_interest, df_params], ignore_index=True)
 
     st.subheader(title)
-    opacity = alt.selection_single(fields=['Savings'], on='click', bind='legend')
+    opacity = alt.selection_point(fields=['Savings'], on='click', bind='legend')
     interest_chart = alt.Chart(df_interest).mark_line().encode(
         x='Year',
         y='Interest (€)',
@@ -193,7 +193,7 @@ def optimized_sold_chart(df_optimized_forecast, title, yaxis):
     df_optimized_forecast_sold["Savings"] = df_optimized_forecast_sold["saving"].str.replace(" sold", "")
     df_optimized_forecast_sold = df_optimized_forecast_sold.rename(columns={'sold': 'Sold (€)'})
 
-    opacity = alt.selection_single(fields=['Savings'], on='click', bind='legend')
+    opacity = alt.selection_point(fields=['Savings'], on='click', bind='legend')
     optimized_sold_chart = alt.Chart(df_optimized_forecast_sold).mark_line().encode(
         x="Year",
         y=alt.Y("Sold (€):Q", axis=alt.Axis(title=yaxis)),
@@ -221,7 +221,7 @@ def optimized_interest_chart(df_optimized_forecast, title, yaxis):
                                                                                                      "")
     df_optimized_forecast_interest = df_optimized_forecast_interest.rename(columns={'interest': 'Interest (€)'})
 
-    opacity = alt.selection_single(fields=['Savings'], on='click', bind='legend')
+    opacity = alt.selection_point(fields=['Savings'], on='click', bind='legend')
     optimized_interest_chart = alt.Chart(df_optimized_forecast_interest).mark_line().encode(
         x="Year",
         y=alt.Y("Interest (€):Q", axis=alt.Axis(title=yaxis)),
