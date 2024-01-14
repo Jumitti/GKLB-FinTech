@@ -391,6 +391,7 @@ with col1:
         "accounts—enabling users to add, modify, or delete accounts with ease. GK!LB simplifies the process of "
         "tracking and optimizing savings, offering a streamlined and efficient financial management solution.</div>",
         unsafe_allow_html=True)
+    st.write("Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
     st.divider()
 if len(depositary_files) > 0:
     with col2:

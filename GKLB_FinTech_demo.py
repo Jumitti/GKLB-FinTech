@@ -379,6 +379,7 @@ with st.sidebar.expander("Create depositary profile", expanded=False):
         save_saving_account(depositary_file, [new_depositary, new_saving])
         st.toast(f"Depositary **{depositary_name}** created", icon='🎉')
 
+st.warning("**DISCLAIMER**: GK!LB is currently in demo mode. For security reasons, please refrain from entering any personal or sensitive information. If you wish to use GK!LB for personal purposes, we recommend accessing the [GitHub](https://github.com/Jumitti/GKLB-FinTech) repository and running the application locally on your machine. The GitHub repository provides detailed instructions for setting up and utilizing the application in a secure and private environment. Your understanding and cooperation are greatly appreciated.", icon='🚨')
 col1, col2, col3 = st.columns(3)
 with col1:
     # Main page
@@ -391,6 +392,7 @@ with col1:
         "accounts—enabling users to add, modify, or delete accounts with ease. GK!LB simplifies the process of "
         "tracking and optimizing savings, offering a streamlined and efficient financial management solution.</div>",
         unsafe_allow_html=True)
+    st.write("Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
     st.divider()
 if len(depositary_files) > 0:
     with col2:
