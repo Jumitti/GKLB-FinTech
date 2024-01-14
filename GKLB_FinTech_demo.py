@@ -13,13 +13,13 @@ from scipy.optimize import minimize
 def get_depositary_name(depositary_file):
     with open(os.path.join(depositary_path, depositary_file), 'r') as json_file:
         data = json.load(json_file)
-        return data[0].get("depositary", "")
+        return data[0].get("depositary_demo", "")
 
 
 # Loading depositary information
 def load_saving_accounts(depositary_file):
     try:
-        with open(f"depositary/{depositary_file}", "r") as depositary_file:
+        with open(f"depositary_demo/{depositary_file}", "r") as depositary_file:
             saving_accounts = json.load(depositary_file)
     except FileNotFoundError:
         saving_accounts = []
@@ -28,7 +28,7 @@ def load_saving_accounts(depositary_file):
 
 # Update/create depositary information
 def save_saving_account(depositary_file, savings):
-    with open(f"depositary/{depositary_file}", "w") as depositary_file:
+    with open(f"depositary_demo/{depositary_file}", "w") as depositary_file:
         json.dump(savings, depositary_file, indent=2)
 
 
@@ -260,7 +260,7 @@ if st.sidebar.button("🔄️ Update"):  # Update info
 st.sidebar.divider()
 
 # Load all depositary
-depositary_path = "depositary"
+depositary_path = "depositary_demo"
 depositary_files = [depositary_file for depositary_file in os.listdir(depositary_path) if
                     depositary_file.endswith(".json")]
 
