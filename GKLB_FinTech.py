@@ -94,34 +94,33 @@ def calculer_solde_total(comptes, duree_annees, annee_en_cours=2024):
 
 # Graphic of savings
 def graphique_total(df, solde_total, forcast, annee_en_cours, comptes_selectionnes, title):
-    df["Année"] = list(range(annee_en_cours, annee_en_cours + forcast + 1))
-    df["Type"] = "Total"
-    df["Montant"] = solde_total
+    df["Year"] = list(range(annee_en_cours, annee_en_cours + forcast + 1))
+    df["Savings"] = "Total"
+    df["Sold (€)"] = solde_total
 
     for compte in comptes_selectionnes:
         df_compte = pd.DataFrame({
-            'Année': list(range(annee_en_cours, annee_en_cours + forcast + 1)),
-            'Type': compte["nom"],
-            'Montant': compte["solde_previsionnel"]
+            'Year': list(range(annee_en_cours, annee_en_cours + forcast + 1)),
+            'Savings': compte["nom"],
+            'Sold (€)': compte["solde_previsionnel"]
         })
         df = pd.concat([df, df_compte], ignore_index=True)
 
     st.subheader(title)
-    opacity = alt.selection_single(fields=['Type'], on='click', bind='legend')
-    chart = alt.Chart(df).encode(
-        x='Année',
-        y='Montant',
-        color='Type',
-        tooltip=['Année', 'Type', 'Montant'], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
+    opacity = alt.selection_single(fields=['Savings'], on='click', bind='legend')
+    chart = alt.Chart(df).mark_line().encode(
+        x='Year',
+        y='Sold (€)',
+        color='Savings', opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
+    ) + alt.Chart(df).mark_circle(size=100).encode(
+        x='Year',
+        y='Sold (€)',
+        color='Savings',
+        tooltip=['Savings', 'Sold (€)', 'Year'], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
     ).properties(
         width=600,
         height=400
-    ).mark_line().interactive() + alt.Chart(df).mark_circle(size=100).encode(
-        x='Année',
-        y='Montant',
-        color='Type',
-        tooltip=['Année', 'Type', 'Montant'], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
-    ).add_params(opacity)
+    ).interactive().add_params(opacity)
 
     st.altair_chart(chart, theme=None, use_container_width=True)
 
@@ -152,34 +151,33 @@ def calculer_interets_total(interets_par_compte, duree_annees):
 
 # Graphic of interest rate
 def graphique_interet(df_interets, interets_par_compte, forcast, interets_total, annee_en_cours, comptes_selectionnes, title):
-    df_interets["Année"] = list(range(annee_en_cours, annee_en_cours + forcast + 1))
-    df_interets["Type"] = "Total"
-    df_interets["Intérêts"] = interets_total
+    df_interets["Year"] = list(range(annee_en_cours, annee_en_cours + forcast + 1))
+    df_interets["Savings"] = "Total"
+    df_interets["Interest (€)"] = interets_total
 
     for compte in comptes_selectionnes:
         df_interets_compte = pd.DataFrame({
-            'Année': list(range(annee_en_cours, annee_en_cours + forcast + 1)),
-            'Type': compte["nom"],
-            'Intérêts': interets_par_compte[compte["nom"]]
+            'Year': list(range(annee_en_cours, annee_en_cours + forcast + 1)),
+            'Savings': compte["nom"],
+            'Interest (€)': interets_par_compte[compte["nom"]]
         })
         df_interets = pd.concat([df_interets, df_interets_compte], ignore_index=True)
 
     st.subheader(title)
-    opacity = alt.selection_single(fields=['Type'], on='click', bind='legend')
-    chart_interets_total = alt.Chart(df_interets).encode(
-        x='Année',
-        y='Intérêts',
-        color='Type',
-        tooltip=['Année', 'Type', 'Intérêts'], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
+    opacity = alt.selection_single(fields=['Savings'], on='click', bind='legend')
+    chart_interets_total = alt.Chart(df_interets).mark_line().encode(
+        x='Year',
+        y='Interest (€)',
+        color='Savings', opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
+    ) + alt.Chart(df_interets).mark_circle(size=100).encode(
+        x='Year',
+        y='Interest (€)',
+        color='Savings',
+        tooltip=['Savings', 'Interest (€)', 'Year'], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
     ).properties(
         width=600,
         height=400
-    ).mark_line().interactive() + alt.Chart(df_interets).mark_circle(size=100).encode(
-        x='Année',
-        y='Intérêts',
-        color='Type',
-        tooltip=['Année', 'Type', 'Intérêts'], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
-    ).add_params(opacity)
+    ).interactive().add_params(opacity)
 
     st.altair_chart(chart_interets_total, theme=None, use_container_width=True)
 
@@ -323,7 +321,7 @@ with st.sidebar.expander("Ajouter un dépositaire", expanded=False):
         save_saving_account(depositary_file, [nouveau_depositary, nouveau_compte])
         st.toast("Depositaire ajouté")
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3 = st.columns([0.8,1.1,1.1])
 if len(json_files) > 0:
     with col1:
         st.subheader("📊 Savings information")
@@ -371,10 +369,7 @@ if len(json_files) > 0:
     with col3:
         container = st.container()
         # Afficher la répartition optimale dans Streamlit
-        st.header("Répartition Optimale des Fonds pour Maximiser les Intérêts")
-
         montant_total_initial = montant_total
-
         resultats = []
         nouveau_montant = 0
 
@@ -407,12 +402,12 @@ if len(json_files) > 0:
 
             else:
                 for i, compte in enumerate(comptes_selectionnes):
-                    if ligne_resultat[f'{compte["nom"]} savings'] >= compte["plafond"]:
+                    if ligne_resultat[f'{compte["nom"]} sold'] >= compte["plafond"]:
                         interet = compte["taux_interet"] * compte["plafond"] / 100
                     else:
-                        interet = compte["taux_interet"] * ligne_resultat[f'{compte["nom"]} savings'] / 100
-                    ligne_resultat[f'{compte["nom"]} savings'] += interet
-                    nouveaux_soldes.append(ligne_resultat[f'{compte["nom"]} savings'])
+                        interet = compte["taux_interet"] * ligne_resultat[f'{compte["nom"]} sold'] / 100
+                    ligne_resultat[f'{compte["nom"]} sold'] += interet
+                    nouveaux_soldes.append(ligne_resultat[f'{compte["nom"]} sold'])
                     nouveaux_interet.append(interet)
 
             # Nouveau montant pour l'année suivante
@@ -420,76 +415,74 @@ if len(json_files) > 0:
             nouveau_montant_interet = np.sum(nouveaux_interet)
 
             # Enregistrer les résultats dans la liste
-            ligne_resultat = {"Année": annee, "Total savings": nouveau_montant, "Total interest": nouveau_montant_interet}
+            ligne_resultat = {"Year": annee, "Total sold": nouveau_montant, "Total interest": nouveau_montant_interet}
             for i, compte in enumerate(comptes_selectionnes):
-                ligne_resultat[f"{compte['nom']} savings"] = nouveaux_soldes[i]
+                ligne_resultat[f"{compte['nom']} sold"] = nouveaux_soldes[i]
                 if (nouveaux_soldes[i] - nouveaux_interet[i])/compte["plafond"] < 0.95:
                     ligne_resultat[f"{compte['nom']} to_place"] = nouveaux_soldes[i] - nouveaux_interet[i]
                 else:
-                    ligne_resultat[f"{compte['nom']} to_place"] = f'Full ({compte["plafond"]})'
+                    ligne_resultat[f"{compte['nom']} to_place"] = f'**Full** ({compte["plafond"]})'
                 ligne_resultat[f"{compte['nom']} interest"] = nouveaux_interet[i]
             resultats.append(ligne_resultat)
 
-        # Créer le DataFrame résultat
         df_resultats = pd.DataFrame(resultats)
 
-        # Créer un DataFrame pour les soldes
-        df_solde = df_resultats.melt(id_vars=["Année"], var_name="Compte", value_name="savings")
-
-        # Filtrer les colonnes contenant "Solde"
-        df_solde = df_solde[df_solde["Compte"].str.contains("savings")]
-
-        # Ajouter une colonne "Label" pour simplifier les étiquettes
-        df_solde["Label"] = df_solde["Compte"].str.replace(" savings", "")
+        df_solde = df_resultats.melt(id_vars=["Year"], var_name="Compte", value_name="sold")
+        df_solde = df_solde[df_solde["Compte"].str.contains("sold")]
+        df_solde["Savings"] = df_solde["Compte"].str.replace(" sold", "")
+        df_solde = df_solde.rename(columns={'sold': 'Sold (€)'})
 
         opacity = alt.selection_single(fields=['Label'], on='click', bind='legend')
         chart_solde = alt.Chart(df_solde).mark_line().encode(
-            x="Année",
-            y=alt.Y("savings:Q", axis=alt.Axis(title="Montant Total + Solde")),
-            color=alt.Color("Label:N", legend=alt.Legend(title=None)),
-            tooltip=["Année", "savings"], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
-        ).interactive() + alt.Chart(df_solde).mark_circle(size=100).encode(
-            x="Année",
-            y=alt.Y("savings:Q", axis=alt.Axis(title="Montant Total + Solde")),
-            color=alt.Color("Label:N", legend=alt.Legend(title=None)),
-            tooltip=["Année", "savings"], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
+            x="Year",
+            y="Sold (€):Q",
+            color="Savings:N", opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
+        ) + alt.Chart(df_solde).mark_circle(size=100).encode(
+            x=alt.X("Year", axis=alt.Axis(title="Year")),
+            y="Sold (€):Q",
+            color="Savings:N",
+            tooltip=['Savings:N', "Sold (€)", "Year"], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
         ).properties(
             width=600,
             height=400
-        ).add_params(opacity)
+        ).interactive().add_params(opacity)
 
-        # Afficher le graphique avec Streamlit
+        container.subheader('💫💰 Optimized forcast savings')
         container.altair_chart(chart_solde, theme=None, use_container_width=True)
 
-        # Créer un DataFrame pour les intérêts
-        df_interet = df_resultats.melt(id_vars=["Année"], var_name="Compte", value_name="interest")
-
-        # Filtrer les colonnes contenant "Intérêt"
+        df_interet = df_resultats.melt(id_vars=["Year"], var_name="Compte", value_name="interest")
         df_interet = df_interet[df_interet["Compte"].str.contains("interest")]
-
-        # Ajouter une colonne "Label" pour simplifier les étiquettes
-        df_interet["Label"] = df_interet["Compte"].str.replace(" interest", "")
+        df_interet["Savings"] = df_interet["Compte"].str.replace(" interest", "")
+        df_interet = df_interet.rename(columns={'interest': 'Interest (€)'})
 
         opacity = alt.selection_single(fields=['Label'], on='click', bind='legend')
         chart_interet = alt.Chart(df_interet).mark_line().encode(
-            x="Année",
-            y=alt.Y("interest:Q"),
-            color=alt.Color("Label:N", legend=alt.Legend(title=None)),
-            tooltip=["Année", "interest"], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
+            x="Year",
+            y="Interest (€):Q",
+            color="Savings:N",
+            tooltip=["Year", "Interest (€)"], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
         ).interactive() + alt.Chart(df_interet).mark_circle(size=100).encode(
-            x="Année",
-            y=alt.Y("interest:Q",),
-            color=alt.Color("Label:N", legend=alt.Legend(title=None)),
-            tooltip=["Année", "interest"], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
+            x="Year",
+            y="Interest (€):Q",
+            color="Savings:N",
+            tooltip=["Year", "Interest (€)"], opacity=alt.condition(opacity, alt.value(0.8), alt.value(0.2))
         ).properties(
             width=600,
             height=400
         ).add_params(opacity)
 
-        # Afficher le graphique avec Streamlit
+        container.subheader('💫🪙 Optimized forcast interest rate')
         container.altair_chart(chart_interet, theme=None, use_container_width=True)
 
-    st.dataframe(df_resultats, hide_index=True, use_container_width=True)
+    st.subheader("💫🧮 Optimal placement")
+    subset_sold = pd.IndexSlice[:, df_resultats.columns[df_resultats.columns.str.contains('sold')]]
+    subset_to_place = pd.IndexSlice[:, df_resultats.columns[df_resultats.columns.str.contains('to_place')]]
+    subset_interest = pd.IndexSlice[:, df_resultats.columns[df_resultats.columns.str.contains('interest')]]
+    styled_df = df_resultats.style.set_properties(**{'background-color': '#FFCCCC'}, subset=subset_sold)\
+        .set_properties(**{'background-color': '#CCCCFF'}, subset=subset_to_place)\
+        .set_properties(**{'background-color': '#CCFFCC'}, subset=subset_interest)
+    st.dataframe(styled_df, hide_index=True, use_container_width=True)
+
 else:
     st.subheader("Welcome to GK!LB. A little FinTech app")
     st.subheader("For start, add your first depositary with the left panel and don't forget to update")
