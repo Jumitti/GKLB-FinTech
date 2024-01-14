@@ -491,7 +491,7 @@ if len(depositary_files) > 0:
                 # Calculer les intérêts et mettre à jour les soldes
                 optimized_sold = []
                 optimized_interest = []
-                if optimized_total_sold < np.sum(saving["limit"] for saving in selected_savings):
+                if optimized_total_sold < np.sum(list(saving["limit"] for saving in selected_savings)):
                     for i, saving in enumerate(selected_savings):
                         interet = saving["interest_rate"] * optimized_placements[i] / 100
                         optimized_placements[i] += interet
