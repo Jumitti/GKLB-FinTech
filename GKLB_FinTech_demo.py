@@ -531,10 +531,13 @@ if len(depositary_files) > 0:
                                   "Total interest": optimized_total_interest}
                 for i, saving in enumerate(selected_savings):
                     data_optimized[f"{saving['saving']} sold"] = optimized_sold[i]
-                    if (optimized_sold[i] - optimized_interest[i]) / saving["limit"] < 0.95 or saving["limit"] == 0:
+                    if saving["limit"] == 0:
                         data_optimized[f"{saving['saving']} to_place"] = optimized_sold[i] - optimized_interest[i]
                     else:
-                        data_optimized[f"{saving['saving']} to_place"] = f'**Full** ({saving["limit"]})'
+                        if (optimized_sold[i] - optimized_interest[i]) / saving["limit"] < 0.95:
+                            data_optimized[f"{saving['saving']} to_place"] = optimized_sold[i] - optimized_interest[i]
+                        else:
+                            data_optimized[f"{saving['saving']} to_place"] = saving["limit"]
                     data_optimized[f"{saving['saving']} interest"] = optimized_interest[i]
                 optimized_forecast.append(data_optimized)
 
