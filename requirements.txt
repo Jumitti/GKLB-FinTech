@@ -1,5 +1,5 @@
-altair
-numpy
-pandas
-scipy
-streamlit
+altair==5.0.1
+numpy==1.24.3
+pandas==2.0.3
+scipy==1.11.2
+streamlit==1.28.1

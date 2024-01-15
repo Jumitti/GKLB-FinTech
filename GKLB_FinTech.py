@@ -9,17 +9,10 @@ import streamlit as st
 from scipy.optimize import minimize
 
 
-# Depositary folder
-def get_depositary_name(depositary_file):
-    with open(os.path.join(depositary_path, depositary_file), 'r') as json_file:
-        data = json.load(json_file)
-        return data[0].get("depositary", "")
-
-
 # Loading depositary information
-def load_saving_accounts(depositary_file):
+def load_saving_accounts(depositary_path, depositary_file):
     try:
-        with open(f"depositary/{depositary_file}", "r") as depositary_file:
+        with open(f"{depositary_path}/{depositary_file}", "r") as depositary_file:
             saving_accounts = json.load(depositary_file)
     except FileNotFoundError:
         saving_accounts = []
@@ -27,8 +20,8 @@ def load_saving_accounts(depositary_file):
 
 
 # Update/create depositary information
-def save_saving_account(depositary_file, savings):
-    with open(f"depositary/{depositary_file}", "w") as depositary_file:
+def save_saving_account(depositary_path, depositary_file, savings):
+    with open(f"{depositary_path}/{depositary_file}", "w") as depositary_file:
         json.dump(savings, depositary_file, indent=2)
 
 
@@ -258,6 +251,8 @@ st.set_page_config(
     layout="wide")
 
 # Sidebar manager
+current_directory = os.path.dirname(os.path.abspath(__file__))
+st.sidebar.image("https://raw.githubusercontent.com/Jumitti/GKLB-FinTech/master/img/GKLB_wobg.png", use_column_width=True)
 st.sidebar.title(f"[GK!LB - Manager](https://www.youtube.com/watch?v=S4Ez-aDbAoA)")
 
 if st.sidebar.button("🔄️ Update"):  # Update info
@@ -265,7 +260,8 @@ if st.sidebar.button("🔄️ Update"):  # Update info
 st.sidebar.divider()
 
 # Load all depositary
-depositary_path = "depositary"
+current_directory = os.path.dirname(os.path.abspath(__file__))
+depositary_path = os.path.join(current_directory, "depositary")
 depositary_files = [depositary_file for depositary_file in os.listdir(depositary_path) if
                     depositary_file.endswith(".json")]
 
@@ -288,7 +284,7 @@ if len(depositary_files) > 0:
     # Depositary selection
     selected_depositary_file = st.sidebar.selectbox("Select depositary:", list(depositary_mapping.keys()))
     depositary_file = depositary_mapping[selected_depositary_file]
-    savings = load_saving_accounts(depositary_file)
+    savings = load_saving_accounts(depositary_path, depositary_file)
 
     # Add a saving account
     with st.sidebar.expander("Add saving account", expanded=False):
@@ -320,7 +316,7 @@ if len(depositary_files) > 0:
                 "limit": limit
             }
             savings.append(new_saving)
-            save_saving_account(depositary_file, savings)
+            save_saving_account(depositary_path, depositary_file, savings)
             st.toast(f"Saving account **{saving_name}** created", icon='💰')
 
     # Update a saving account
@@ -344,7 +340,7 @@ if len(depositary_files) > 0:
                 selected_saving["sold"] = initial_sold
                 selected_saving["interest_rate"] = interest_rate
                 selected_saving["limit"] = limit
-                save_saving_account(depositary_file, savings)
+                save_saving_account(depositary_path, depositary_file, savings)
 
                 # Delete saving account
                 if len(savings) == 2:
@@ -354,7 +350,7 @@ if len(depositary_files) > 0:
                 if st.button("Delete saving account", disabled=disable_delete,
                              help="Cannot delete an account if the depository only has one" if disable_delete else ""):
                     savings.remove(selected_saving)
-                    save_saving_account(depositary_file, savings)
+                    save_saving_account(depositary_path, depositary_file, savings)
                     st.toast(f"Saving account **{selected_saving['saving']}** deleted", icon='🗑️')
 
     # Delete a depositary
@@ -396,7 +392,7 @@ with st.sidebar.expander("Create depositary profile", expanded=False):
                       "sold": initial_sold,
                       "interest_rate": interest_rate,
                       "limit": limit}
-        save_saving_account(depositary_file, [new_depositary, new_saving])
+        save_saving_account(depositary_path, depositary_file, [new_depositary, new_saving])
         st.toast(f"Depositary **{depositary_name}** created", icon='🎉')
 
 col1, col2, col3 = st.columns(3)
