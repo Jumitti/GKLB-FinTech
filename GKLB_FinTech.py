@@ -413,7 +413,7 @@ with col1:
         "tracking and optimizing savings, offering a streamlined and efficient financial management solution.</div>",
         unsafe_allow_html=True)
     st.write(
-        "Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
+        "Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [Download app](https://github.com/Jumitti/GKLB-FinTech/releases/tag/beta_v0.1) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
     st.divider()
 if len(depositary_files) > 0:
     with col2:
