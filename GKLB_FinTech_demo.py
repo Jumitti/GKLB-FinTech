@@ -9,17 +9,10 @@ import streamlit as st
 from scipy.optimize import minimize
 
 
-# Depositary folder
-def get_depositary_name(depositary_file):
-    with open(os.path.join(depositary_path, depositary_file), 'r') as json_file:
-        data = json.load(json_file)
-        return data[0].get("depositary_demo", "")
-
-
 # Loading depositary information
-def load_saving_accounts(depositary_file):
+def load_saving_accounts(depositary_path, depositary_file):
     try:
-        with open(f"depositary_demo/{depositary_file}", "r") as depositary_file:
+        with open(f"{depositary_path}/{depositary_file}", "r") as depositary_file:
             saving_accounts = json.load(depositary_file)
     except FileNotFoundError:
         saving_accounts = []
@@ -27,8 +20,8 @@ def load_saving_accounts(depositary_file):
 
 
 # Update/create depositary information
-def save_saving_account(depositary_file, savings):
-    with open(f"depositary_demo/{depositary_file}", "w") as depositary_file:
+def save_saving_account(depositary_path, depositary_file, savings):
+    with open(f"{depositary_path}/{depositary_file}", "w") as depositary_file:
         json.dump(savings, depositary_file, indent=2)
 
 
@@ -73,7 +66,10 @@ def forecast_sold(savings, forecast, current_year):
         forecast_sold_list = [forecast_sold]
 
         for year in range(1, forecast + 1):
-            annual_sold = min(forecast_sold, saving["limit"])
+            if saving["limit"] == 0:
+                annual_sold = forecast_sold
+            else:
+                annual_sold = min(forecast_sold, saving["limit"])
             annual_interest = annual_sold * (saving["interest_rate"] / 100)
             forecast_sold += annual_interest
             forecast_sold_list.append(forecast_sold)
@@ -133,7 +129,10 @@ def forecast_interest(savings, forecast):
 
     for year in range(forecast + 1):
         for saving in savings:
-            forecast_sold = min(saving["forecast_sold"][year - 1], saving["limit"])
+            if saving["limit"] == 0:
+                forecast_sold = saving["forecast_sold"][year - 1]
+            else:
+                forecast_sold = min(saving["forecast_sold"][year - 1], saving["limit"])
             annual_interest = forecast_sold * (saving["interest_rate"] / 100)
             saving_interest[saving["saving"]][year - 1] = annual_interest
 
@@ -266,7 +265,8 @@ if st.sidebar.button("🔄️ Update"):  # Update info
 st.sidebar.divider()
 
 # Load all depositary
-depositary_path = "depositary_demo"
+current_directory = os.path.dirname(os.path.abspath(__file__))
+depositary_path = os.path.join(current_directory, "depositary")
 depositary_files = [depositary_file for depositary_file in os.listdir(depositary_path) if
                     depositary_file.endswith(".json")]
 
@@ -289,15 +289,15 @@ if len(depositary_files) > 0:
     # Depositary selection
     selected_depositary_file = st.sidebar.selectbox("Select depositary:", list(depositary_mapping.keys()))
     depositary_file = depositary_mapping[selected_depositary_file]
-    savings = load_saving_accounts(depositary_file)
+    savings = load_saving_accounts(depositary_path, depositary_file)
 
     # Add a saving account
     with st.sidebar.expander("Add saving account", expanded=False):
-        saving_name = st.text_input("Saving account name", max_chars=20)
+        saving_name = st.text_input("Saving account name", max_chars=20, help=' \ / : * ? \ " < > | not allowed')
         initial_sold = st.number_input("Initial sold (€)", step=1.0, min_value=0.0)
         interest_rate = st.number_input("Interest rate (%)", step=0.1, min_value=0.0,
                                         max_value=100.0)
-        limit = st.number_input("Limit (€)", step=1.0, min_value=0.0)
+        limit = st.number_input("Limit (€)", step=1.0, min_value=0.0, help="For no limit, use 0")
 
         if any(isinstance(saving, dict) and "saving" in saving and saving["saving"] == saving_name for saving in
                savings):
@@ -321,7 +321,7 @@ if len(depositary_files) > 0:
                 "limit": limit
             }
             savings.append(new_saving)
-            save_saving_account(depositary_file, savings)
+            save_saving_account(depositary_path, depositary_file, savings)
             st.toast(f"Saving account **{saving_name}** created", icon='💰')
 
     # Update a saving account
@@ -341,11 +341,11 @@ if len(depositary_files) > 0:
                 interest_rate = st.number_input("Interest rate (%)", value=float(selected_saving["interest_rate"]),
                                                 step=0.1, min_value=0.0, max_value=100.0)
                 limit = st.number_input("Limit (€)", value=float(selected_saving["limit"]), step=1.0,
-                                        min_value=0.0)
+                                        min_value=0.0, help="For no limit, use 0")
                 selected_saving["sold"] = initial_sold
                 selected_saving["interest_rate"] = interest_rate
                 selected_saving["limit"] = limit
-                save_saving_account(depositary_file, savings)
+                save_saving_account(depositary_path, depositary_file, savings)
 
                 # Delete saving account
                 if len(savings) == 2:
@@ -355,7 +355,7 @@ if len(depositary_files) > 0:
                 if st.button("Delete saving account", disabled=disable_delete,
                              help="Cannot delete an account if the depository only has one" if disable_delete else ""):
                     savings.remove(selected_saving)
-                    save_saving_account(depositary_file, savings)
+                    save_saving_account(depositary_path, depositary_file, savings)
                     st.toast(f"Saving account **{selected_saving['saving']}** deleted", icon='🗑️')
 
     # Delete a depositary
@@ -368,11 +368,11 @@ if len(depositary_files) > 0:
 
 # Create a depositary
 with st.sidebar.expander("Create depositary profile", expanded=False):
-    depositary_name = st.text_input("Depositary name", max_chars=20)
-    saving_name = st.text_input("Saving account name", max_chars=20, key="4")
+    depositary_name = st.text_input("Depositary name", max_chars=20, help=' \ / : * ? \ " < > | not allowed')
+    saving_name = st.text_input("Saving account name", max_chars=20, key="4", help=' \ / : * ? \ " < > | not allowed')
     initial_sold = st.number_input("Initial sold (€)", step=1.0, min_value=0.0, key='1')
     interest_rate = st.number_input("Interest rate (%)", step=0.1, min_value=0.0, max_value=100.0, key='2')
-    limit = st.number_input("Limit (€)", step=1.0, min_value=0.0, key='3')
+    limit = st.number_input("Limit (€)", step=1.0, min_value=0.0, key='3', help="For no limit, use 0")
 
     depositary_file = f"depositary_{depositary_name}.json"
     if len(depositary_files) > 0:
@@ -397,7 +397,7 @@ with st.sidebar.expander("Create depositary profile", expanded=False):
                       "sold": initial_sold,
                       "interest_rate": interest_rate,
                       "limit": limit}
-        save_saving_account(depositary_file, [new_depositary, new_saving])
+        save_saving_account(depositary_path, depositary_file, [new_depositary, new_saving])
         st.toast(f"Depositary **{depositary_name}** created", icon='🎉')
 
 st.warning(
@@ -425,7 +425,7 @@ with col1:
         "tracking and optimizing savings, offering a streamlined and efficient financial management solution.</div>",
         unsafe_allow_html=True)
     st.write(
-        "Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [Download app](https://github.com/Jumitti/GKLB-FinTech/releases/tag/beta_v0.1) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
+        "Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
     st.divider()
 if len(depositary_files) > 0:
     with col2:
@@ -490,7 +490,8 @@ if len(depositary_files) > 0:
                 # Optimiser les placements
                 constraint = [{"type": "eq", "fun": limit_constraint,
                                "args": (total_sold if year == current_year else optimized_total_sold,)}]
-                bounds = [(0, saving["limit"]) for saving in selected_savings]
+                bounds = [(0, float('inf')) if saving["limit"] == 0 else (0, saving["limit"]) for saving in
+                          selected_savings]
                 x0 = [0.0] * len(selected_savings)
                 placements_optimization = minimize(
                     placement_optimization,
@@ -504,22 +505,22 @@ if len(depositary_files) > 0:
                 # Calculer les intérêts et mettre à jour les soldes
                 optimized_sold = []
                 optimized_interest = []
-                if optimized_total_sold < np.sum(list(saving["limit"] for saving in selected_savings)):
+                if optimized_total_sold < np.sum(list(saving["limit"] for saving in selected_savings)) or any(saving["limit"] == 0 for saving in selected_savings):
                     for i, saving in enumerate(selected_savings):
-                        interet = saving["interest_rate"] * optimized_placements[i] / 100
-                        optimized_placements[i] += interet
+                        interest = saving["interest_rate"] * optimized_placements[i] / 100
+                        optimized_placements[i] += interest
                         optimized_sold.append(optimized_placements[i])
-                        optimized_interest.append(interet)
+                        optimized_interest.append(interest)
 
                 else:
                     for i, saving in enumerate(selected_savings):
-                        if data_optimized[f'{saving["saving"]} sold'] >= saving["limit"]:
-                            interet = saving["interest_rate"] * saving["limit"] / 100
+                        if data_optimized[f'{saving["saving"]} sold'] >= saving["limit"] != 0:
+                            interest = saving["interest_rate"] * saving["limit"] / 100
                         else:
-                            interet = saving["interest_rate"] * data_optimized[f'{saving["saving"]} sold'] / 100
-                        data_optimized[f'{saving["saving"]} sold'] += interet
+                            interest = saving["interest_rate"] * data_optimized[f'{saving["saving"]} sold'] / 100
+                        data_optimized[f'{saving["saving"]} sold'] += interest
                         optimized_sold.append(data_optimized[f'{saving["saving"]} sold'])
-                        optimized_interest.append(interet)
+                        optimized_interest.append(interest)
 
                 # Nouveau montant pour l'année suivante
                 optimized_total_sold = np.sum(optimized_sold)
@@ -530,7 +531,7 @@ if len(depositary_files) > 0:
                                   "Total interest": optimized_total_interest}
                 for i, saving in enumerate(selected_savings):
                     data_optimized[f"{saving['saving']} sold"] = optimized_sold[i]
-                    if (optimized_sold[i] - optimized_interest[i]) / saving["limit"] < 0.95:
+                    if (optimized_sold[i] - optimized_interest[i]) / saving["limit"] < 0.95 or saving["limit"] == 0:
                         data_optimized[f"{saving['saving']} to_place"] = optimized_sold[i] - optimized_interest[i]
                     else:
                         data_optimized[f"{saving['saving']} to_place"] = f'**Full** ({saving["limit"]})'
@@ -547,12 +548,9 @@ if len(depositary_files) > 0:
 
     if len(selected_savings) >= 2:
         st.subheader("💫🧮 Optimal forecast placements")
-        subset_sold = pd.IndexSlice[:,
-                      df_optimized_forecast.columns[df_optimized_forecast.columns.str.contains('sold')]]
-        subset_to_place = pd.IndexSlice[:,
-                          df_optimized_forecast.columns[df_optimized_forecast.columns.str.contains('to_place')]]
-        subset_interest = pd.IndexSlice[:,
-                          df_optimized_forecast.columns[df_optimized_forecast.columns.str.contains('interest')]]
+        subset_sold = pd.IndexSlice[:, df_optimized_forecast.columns[df_optimized_forecast.columns.str.contains('sold')]]
+        subset_to_place = pd.IndexSlice[:, df_optimized_forecast.columns[df_optimized_forecast.columns.str.contains('to_place')]]
+        subset_interest = pd.IndexSlice[:, df_optimized_forecast.columns[df_optimized_forecast.columns.str.contains('interest')]]
         styled_df = df_optimized_forecast.style.set_properties(**{'background-color': '#FFCCCC'}, subset=subset_sold) \
             .set_properties(**{'background-color': '#CCCCFF'}, subset=subset_to_place) \
             .set_properties(**{'background-color': '#CCFFCC'}, subset=subset_interest)
