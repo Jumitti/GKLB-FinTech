@@ -258,6 +258,7 @@ st.set_page_config(
     layout="wide")
 
 # Sidebar manager
+st.sidebar.image("https://raw.githubusercontent.com/Jumitti/GKLB-FinTech/master/img/GKLB_wobg.png", use_column_width=True)
 st.sidebar.title(f"[GK!LB - Manager](https://www.youtube.com/watch?v=S4Ez-aDbAoA)")
 
 if st.sidebar.button("🔄️ Update"):  # Update info
@@ -402,7 +403,7 @@ with st.sidebar.expander("Create depositary profile", expanded=False):
 st.warning(
     "**DISCLAIMER**: GK!LB is currently in demo mode. For security reasons, please refrain from entering any personal or sensitive information. "
     "If you wish to use GK!LB for personal purposes, we recommend accessing the [GitHub](https://github.com/Jumitti/GKLB-FinTech) "
-    "repository and running the application locally on your machine. The GitHub repository provides detailed instructions "
+    "repository and running the [application](https://github.com/Jumitti/GKLB-FinTech/releases/tag/beta_v0.1) locally on your machine . The GitHub repository provides detailed instructions "
     "for setting up and utilizing the application in a secure and private environment. Your understanding and cooperation are greatly appreciated.\n\n"
     "**By using this demo version, you agree that:**\n\n"
     "- The application is provided for demonstration purposes only.\n\n"
@@ -424,7 +425,7 @@ with col1:
         "tracking and optimizing savings, offering a streamlined and efficient financial management solution.</div>",
         unsafe_allow_html=True)
     st.write(
-        "Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
+        "Created by Minniti Julien - [GitHub](https://github.com/Jumitti/GKLB-FinTech) - [Download app](https://github.com/Jumitti/GKLB-FinTech/releases/tag/beta_v0.1) - [MIT licence](https://github.com/Jumitti/GKLB-FinTech/blob/master/LICENSE)")
     st.divider()
 if len(depositary_files) > 0:
     with col2:

@@ -3,8 +3,8 @@ import subprocess
 import time
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
-app_script_path = os.path.join(current_directory, "GKLB_FinTech.py")
-requirements_path = os.path.join(current_directory, "requirements.txt")
+app_script_path = os.path.join(current_directory, "../GKLB_FinTech.py")
+requirements_path = os.path.join(current_directory, "../requirements.txt")
 
 start_messages = [
     "------------------------------------------------------------------------------------------------------",
