@@ -492,11 +492,11 @@ if len(depositary_files) > 0:
         total_interest = total_interest(saving_interest, forecast)
 
         df_sold = pd.DataFrame()
-        title = "💰 Forecast savings"
+        title = "💸💰 Forecast savings"
         df_all_sold = sold_chart(df_sold, total_sold, forecast, current_year, selected_savings, title)
 
         df_interest = pd.DataFrame()
-        title = "🪙 Forecast interests"
+        title = "💸🪙 Forecast interests"
         df_all_interest = interest_chart(df_interest, saving_interest, forecast, total_interest, current_year,
                                          selected_savings, title)
 
